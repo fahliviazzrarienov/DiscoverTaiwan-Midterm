@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Discover Taiwan | Tourism Dashboard</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="script.js" defer></script>
+</head>
+
+<body>
+  <header class="topbar">
+    <a class="brand" href="#">
+      <span class="brand-icon">✳</span>
+      <span>DISCOVER<span class="brand-accent"> TAIWAN</span></span>
+    </a>
+    <div class="topbar-right">
+      <span class="live-dot"></span>
+      <span>TOURISM DATA EXPLORER</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">TRAVEL INSIGHTS · TAIWAN</p>
+        <h1>Discover Taiwan<span class="title-dot">.</span></h1>
+        <p class="hero-description">
+          Explore visitor statistics, discover destinations, and see how tourism
+          changes across Taiwan.
+        </p>
+        <div class="source-line">
+          <span class="source-icon">↗</span>
+          <span id="dataStatus" role="status">Connecting to tourism data...</span>
+        </div>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <div class="sun"></div>
+        <div class="mountain mountain-back"></div>
+        <div class="mountain mountain-front"></div>
+        <div class="art-label">FORMOSA / 23.7°N</div>
+      </div>
+    </section>
+
+    <!-- Stats Cards -->
+    <section class="stats-grid">
+      <article class="stat-card">
+        <div class="stat-top"><span>Total recorded visits</span><span class="stat-icon">↗</span></div>
+        <div id="totalVisitors" class="stat-number">—</div>
+        <p class="stat-foot">For the current selection</p>
+      </article>
+      <article class="stat-card">
+        <div class="stat-top"><span>Destinations</span><span class="stat-icon">⌖</span></div>
+        <div id="totalDestinations" class="stat-number">—</div>
+        <p class="stat-foot">Matching records</p>
+      </article>
+      <article class="stat-card">
+        <div class="stat-top"><span>Counties / cities</span><span class="stat-icon">▦</span></div>
+        <div id="totalRegions" class="stat-number">—</div>
+        <p class="stat-foot">Represented in the data</p>
+      </article>
+      <article class="stat-card highlight-card">
+        <div class="stat-top"><span>Top destination</span><span class="stat-icon">✦</span></div>
+        <div id="topDestination" class="stat-number stat-name">—</div>
+        <p id="topDestinationVisitors" class="stat-foot">Based on recorded visits</p>
+      </article>
+    </section>
+
+    <!-- Filter Panel -->
+    <section class="filter-panel">
+      <div class="filter-heading">
+        <div class="heading-left">
+          <p class="eyebrow eyebrow-large">EXPLORE</p>
+          <h2 class="title-large">Find your destination</h2>
+        </div>
+
+        <div class="filters-center">
+          <label class="filter-control-large">
+            <span>REGION</span>
+            <select id="regionFilter">
+              <option value="all">All regions</option>
+              <option value="North">Northern Taiwan</option>
+              <option value="Central">Central Taiwan</option>
+              <option value="South">Southern Taiwan</option>
+              <option value="East">Eastern Taiwan</option>
+              <option value="Islands">Outlying islands</option>
+              <option value="Other">Other</option>
+            </select>
+          </label>
+        </div>
+
+        <button id="resetButton" class="reset-button reset-button-large" type="button">Reset filters ↺</button>
+      </div>
+    </section>
+
+    <section class="section-heading">
+      <div>
+        <p class="eyebrow">VISUAL ANALYTICS</p>
+        <h2>Tourism at a glance</h2>
+      </div>
+      <p id="resultCount" class="result-count">Loading destinations...</p>
+    </section>
+
+    <section class="charts-grid">
+      <article class="panel chart-panel chart-large">
+        <div class="panel-heading">
+          <div>
+            <h3>Most visited destinations</h3>
+            <p>Top 10 by recorded visitor count</p>
+          </div>
+          <span class="panel-tag">RANKING</span>
+        </div>
+        <div id="barChart" class="chart"></div>
+      </article>
+
+      <article class="panel chart-panel">
+        <div class="panel-heading">
+          <div>
+            <h3>Visitors by region</h3>
+            <p>Share of recorded visits</p>
+          </div>
+          <span class="panel-tag">REGIONS</span>
+        </div>
+        <div id="regionChart" class="chart chart-pie"></div>
+      </article>
+
+      <article class="panel chart-panel chart-full">
+        <div class="panel-heading">
+          <div>
+            <h3>Monthly visitor trends</h3>
+            <p>Monthly totals for the selected destinations and year</p>
+          </div>
+          <span class="panel-tag">SEASONALITY</span>
+        </div>
+        <div id="lineChart" class="chart chart-line"></div>
+      </article>
+    </section>
+
+    <section class="section-heading map-section-heading">
+      <div>
+        <p class="eyebrow">GEOGRAPHIC EXPLORATION</p>
+        <h2>Explore the Taiwan</h2>
+      </div>
+      <p class="result-count">Select a marker to view details</p>
+    </section>
+
+    <section class="panel map-panel">
+      <div class="panel-heading">
+        <div>
+          <h3>Destination map</h3>
+          <p>Markers are based on available destination coordinates</p>
+        </div>
+        <div class="map-legend">
+          <span class="legend-chip"><span class="legend-box" style="background: #9b5de5;"></span> North</span>
+          <span class="legend-chip"><span class="legend-box" style="background: #2ecc71;"></span> South</span>
+          <span class="legend-chip"><span class="legend-box" style="background: #f4d03f;"></span> Central</span>
+          <span class="legend-chip"><span class="legend-box" style="background: #ff69b4;"></span> East / Islands</span>
+        </div>
+      </div>
+      <div id="map" aria-label="Map of tourist destinations in Taiwan"></div>
+      <p class="map-note">Map © OpenStreetMap contributors. Some locations use approximate coordinates.</p>
+    </section>
+
+    <section class="insights-layout">
+      <div class="insight-intro">
+        <p class="eyebrow">WHAT THE DATA SAYS</p>
+        <h2>Key insights<span class="title-dot">.</span></h2>
+        <p>Insights update when you change the filters.</p>
+      </div>
+      <article class="panel insights-panel">
+        <div id="insights" class="insights-content">
+          Loading insights...
+        </div>
+      </article>
+    </section>
+
+    <section class="panel table-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">DESTINATION DIRECTORY</p>
+          <h2>Explore the data</h2>
+          <p>Filter and compare visitor records.</p>
+        </div>
+        <span id="tableCount" class="panel-tag">0 RECORDS</span>
+      </div>
+
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Destination</th>
+              <th>County / City</th>
+              <th>Region</th>
+              <th class="number-cell">Visitors</th>
+            </tr>
+          </thead>
+          <tbody id="destinationTableBody">
+            <tr><td colspan="5" class="empty-cell">Loading data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p id="tableNote" class="table-note">Showing up to 100 matching records.</p>
+    </section>
+
+    <section id="dataError" class="error-panel" hidden>
+      <strong>Data connection issue</strong>
+      <p id="errorMessage">The official CSV could not be loaded.</p>
+      <p>You can still explore the clearly labeled demo dataset. For live data, run this site through a local web server and check whether the source allows browser requests.</p>
+      <a href="https://data.gov.tw/en/datasets/8116" target="_blank" rel="noopener">Open the official dataset ↗</a>
+    </section>
+
+    <footer class="footer">
+      <div class="brand footer-brand">✳ DISCOVER<span class="brand-accent"> TAIWAN</span></div>
+      <p>Tourism data exploration · Built for learning and discovery</p>
+      <p>Official source: <a href="https://data.gov.tw/en/datasets/8116" target="_blank" rel="noopener">Taiwan Tourism Administration open data</a></p>
+    </footer>
+  </main>
+</body>
+</html>
